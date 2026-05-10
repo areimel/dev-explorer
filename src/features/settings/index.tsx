@@ -1,39 +1,28 @@
 import { Outlet } from '@tanstack/react-router'
-import { Monitor, Bell, Palette, Wrench, UserCog } from 'lucide-react'
+import { FolderTree, Palette, Rocket } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { SidebarNav } from './components/sidebar-nav'
 
 const sidebarNavItems = [
   {
-    title: 'Profile',
-    href: '/settings',
-    icon: <UserCog size={18} />,
+    title: 'Scan Roots',
+    href: '/settings/scan-roots',
+    icon: <FolderTree size={18} />,
   },
   {
-    title: 'Account',
-    href: '/settings/account',
-    icon: <Wrench size={18} />,
+    title: 'Launchers',
+    href: '/settings/launchers',
+    icon: <Rocket size={18} />,
   },
   {
     title: 'Appearance',
     href: '/settings/appearance',
     icon: <Palette size={18} />,
-  },
-  {
-    title: 'Notifications',
-    href: '/settings/notifications',
-    icon: <Bell size={18} />,
-  },
-  {
-    title: 'Display',
-    href: '/settings/display',
-    icon: <Monitor size={18} />,
   },
 ]
 
@@ -45,7 +34,6 @@ export function Settings() {
         <Search className='me-auto' />
         <ThemeSwitch />
         <ConfigDrawer />
-        <ProfileDropdown />
       </Header>
 
       <Main fixed>
@@ -54,7 +42,7 @@ export function Settings() {
             Settings
           </h1>
           <p className='text-muted-foreground'>
-            Manage your account settings and set e-mail preferences.
+            Configure scan roots, launchers, and appearance.
           </p>
         </div>
         <Separator className='my-4 lg:my-6' />

@@ -1,119 +1,108 @@
-# Shadcn Admin Dashboard
+# Dev Explorer
 
-Admin Dashboard UI crafted with Shadcn and Vite. Built with responsiveness and accessibility in mind.
+> A desktop project explorer for developers — a smarter alternative to File Explorer for managing and launching local coding projects.
 
-![alt text](public/images/shadcn-admin.png)
+**Status:** Early development. MVP in progress.
 
-[![Sponsored by Clerk](https://img.shields.io/badge/Sponsored%20by-Clerk-5b6ee1?logo=clerk)](https://go.clerk.com/GttUAaK)
+<!-- TODO: screenshot once UI is built -->
 
-I've been creating dashboard UIs at work and for my personal projects. I always wanted to make a reusable collection of dashboard UI for future projects; and here it is now. While I've created a few custom components, some of the code is directly adapted from ShadcnUI examples.
+## What is this?
 
-> This is not a starter project (template) though. I'll probably make one in the future.
+Dev Explorer is a desktop app for organizing, browsing, and opening your local coding projects. Instead of treating every folder the same, it understands what a project is, surfaces the metadata you actually care about (where it lives, what language, when you last touched it), and makes the common next action — _open this thing in the right tool_ — a single click.
+
+It takes inspiration from File Explorer (spatial sense of where your stuff lives), GitHub Desktop / GitKraken / SourceTree (your repos at a glance), and Raycast-style launchers (open in X muscle memory).
+
+Dev Explorer is a personal project, built primarily for the author's own use, and shipped as a real desktop app via [Tauri](https://tauri.app).
 
 ## Features
 
-- Light/dark mode
-- Responsive
-- Accessible
-- With built-in Sidebar component
-- Global search command
-- 10+ pages
-- Extra custom components
-- RTL support
+### MVP (in progress)
 
-<details>
-<summary>Customized Components (click to expand)</summary>
+- **Scan-based discovery** — point the app at one or more parent folders ("scan roots") and it indexes the projects inside, using `.git` and recognized manifest files (`package.json`, `Cargo.toml`, `pyproject.toml`, `go.mod`, `*.sln`, ...) to identify projects
+- **Manual add** — register any folder as a project, scan-root or not
+- **Project list** — searchable, filterable table of all your projects with name, path, language, last-modified
+- **Open in external app** — one click to open a project in VS Code, Windows Terminal, File Explorer, etc.
+- **Configurable launchers** — add your own (Cursor, WebStorm, Warp, ...) using simple `code "{path}"`-style command templates
 
-This project uses Shadcn UI components, but some have been slightly modified for better RTL (Right-to-Left) support and other improvements. These customized components differ from the original Shadcn UI versions.
+### Roadmap
 
-If you want to update components using the Shadcn CLI (e.g., `npx shadcn@latest add <component>`), it's generally safe for non-customized components. For the listed customized ones, you may need to manually merge changes to preserve the project's modifications and avoid overwriting RTL support or other updates.
+**Phase 2 (post-MVP):**
 
-> If you don't require RTL support, you can safely update the 'RTL Updated Components' via the Shadcn CLI, as these changes are primarily for RTL compatibility. The 'Modified Components' may have other customizations to consider.
+- Read-only git status on project rows (branch, ahead/behind, dirty)
+- File-system watcher for live index updates
+- Tags, favorites, pinning
+- Recent projects
 
-### Modified Components
+**Phase 3 (aspirational):**
 
-- scroll-area
-- sonner
-- separator
+- Full git operations (stage / commit / push / pull / branch / diff) — GitKraken-lite
+- Per-project notes
+- Cross-machine sync of project metadata
 
-### RTL Updated Components
+See [`docs/PRD.md`](./docs/PRD.md) for the full product spec.
 
-- alert-dialog
-- calendar
-- command
-- dialog
-- dropdown-menu
-- select
-- table
-- sheet
-- sidebar
-- switch
+## Tech stack
 
-**Notes:**
+- **Vite + React 19 + TypeScript** — frontend
+- **TanStack Router** — file-based routing
+- **shadcn/ui + Tailwind v4** — UI primitives and styling
+- **TanStack Query + Zustand** — data fetching and local state
+- **Tauri 2** — desktop shell (Rust backend) — _to be scaffolded_
+- **Vitest** (browser mode via Playwright) — tests
 
-- **Modified Components**: These have general updates, potentially including RTL adjustments.
-- **RTL Updated Components**: These have specific changes for RTL language support (e.g., layout, positioning).
-- For implementation details, check the source files in `src/components/ui/`.
-- All other Shadcn UI components in the project are standard and can be safely updated via the CLI.
+## Getting started
 
-</details>
+Prerequisites: [Node.js](https://nodejs.org/) and [pnpm](https://pnpm.io/).
 
-## Tech Stack
-
-**UI:** [ShadcnUI](https://ui.shadcn.com) (TailwindCSS + RadixUI)
-
-**Build Tool:** [Vite](https://vitejs.dev/)
-
-**Routing:** [TanStack Router](https://tanstack.com/router/latest)
-
-**Type Checking:** [TypeScript](https://www.typescriptlang.org/)
-
-**Linting/Formatting:** [ESLint](https://eslint.org/) & [Prettier](https://prettier.io/)
-
-**Icons:** [Lucide Icons](https://lucide.dev/icons/), [Tabler Icons](https://tabler.io/icons) (Brand icons only)
-
-**Auth (partial):** [Clerk](https://go.clerk.com/GttUAaK)
-
-## Run Locally
-
-Clone the project
-
-```bash
-  git clone https://github.com/satnaing/shadcn-admin.git
+```sh
+pnpm install
+pnpm dev
 ```
 
-Go to the project directory
+Once Tauri is wired up, the desktop dev workflow will be `pnpm tauri dev` (and you'll need a Rust toolchain via [rustup](https://rustup.rs/)).
 
-```bash
-  cd shadcn-admin
+### Other useful scripts
+
+```sh
+pnpm build           # type-check + Vite build
+pnpm lint            # ESLint
+pnpm format          # Prettier (also reorders imports)
+pnpm knip            # find unused exports / deps
+pnpm test            # Vitest, headless Chromium
 ```
 
-Install dependencies
+First-time test setup requires a one-off Playwright install:
 
-```bash
-  pnpm install
+```sh
+pnpm test:browser:install
 ```
 
-Start the server
+## Repository layout
 
-```bash
-  pnpm run dev
+```
+src/
+  routes/         # TanStack Router file-based routes
+  features/       # feature folders (page composition + components)
+  components/
+    ui/           # shadcn primitives (with local patches — see CLAUDE.md)
+    data-table/   # data-table primitives, reused by the project list
+    layout/       # app shell (sidebar, header)
+  hooks/          # shared hooks
+  lib/            # utilities
+  stores/         # Zustand stores
+  styles/         # Tailwind entry
+docs/
+  PRD.md          # product spec
 ```
 
-## Sponsoring this project ❤️
+## Contributing
 
-If you find this project helpful or use this in your own work, consider [sponsoring me](https://github.com/sponsors/satnaing) to support development and maintenance. You can [buy me a coffee](https://buymeacoffee.com/satnaing) as well. Don’t worry, every penny helps. Thank you! 🙏
+This is a personal project — there's no formal contribution process. If you're working on it with an AI assistant, the conventions and architectural notes live in [`CLAUDE.md`](./CLAUDE.md).
 
-For questions or sponsorship inquiries, feel free to reach out at [satnaingdev@gmail.com](mailto:satnaingdev@gmail.com).
+## Credits
 
-### Current Sponsor
-
-- [Clerk](https://go.clerk.com/GttUAaK) - authentication and user management for the modern web
-
-## Author
-
-Crafted with 🤍 by [@satnaing](https://github.com/satnaing)
+Bootstrapped from the excellent [Shadcn Admin Dashboard](https://github.com/satnaing/shadcn-admin) template by [@satnaing](https://github.com/satnaing). The original template's README is preserved as [`README-original.md`](./README-original.md).
 
 ## License
 
-Licensed under the [MIT License](https://choosealicense.com/licenses/mit/)
+TBD.
