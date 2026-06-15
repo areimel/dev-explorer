@@ -21,6 +21,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  optimizeDeps: {
+    include: ['radix-ui'],
+  },
   test: {
     silent: 'passed-only',
     unstubEnvs: true,

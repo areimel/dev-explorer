@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { ChevronDownIcon } from '@radix-ui/react-icons'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { COLOR_SCHEMES, type ColorScheme } from '@/config/color-schemes'
 import { fonts } from '@/config/fonts'
 import { showSubmittedData } from '@/lib/show-submitted-data'
 import { cn } from '@/lib/utils'
@@ -19,21 +20,28 @@ import {
 } from '@/components/ui/form'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
+const colorSchemeValues = COLOR_SCHEMES.map((s) => s.value) as [
+  ColorScheme,
+  ...ColorScheme[],
+]
+
 const appearanceFormSchema = z.object({
   theme: z.enum(['light', 'dark']),
   font: z.enum(fonts),
+  colorScheme: z.enum(colorSchemeValues),
 })
 
 type AppearanceFormValues = z.infer<typeof appearanceFormSchema>
 
 export function AppearanceForm() {
   const { font, setFont } = useFont()
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, colorScheme, setColorScheme } = useTheme()
 
   // This can come from your database or API.
   const defaultValues: Partial<AppearanceFormValues> = {
     theme: theme as 'light' | 'dark',
     font,
+    colorScheme,
   }
 
   const form = useForm<AppearanceFormValues>({
@@ -44,6 +52,7 @@ export function AppearanceForm() {
   function onSubmit(data: AppearanceFormValues) {
     if (data.font != font) setFont(data.font)
     if (data.theme != theme) setTheme(data.theme)
+    if (data.colorScheme !== colorScheme) setColorScheme(data.colorScheme)
 
     showSubmittedData(data)
   }
@@ -151,6 +160,39 @@ export function AppearanceForm() {
                   </FormLabel>
                 </FormItem>
               </RadioGroup>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name='colorScheme'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Color Scheme</FormLabel>
+              <div className='relative w-max'>
+                <FormControl>
+                  <select
+                    className={cn(
+                      buttonVariants({ variant: 'outline' }),
+                      'w-50 appearance-none font-normal',
+                      'dark:bg-background dark:hover:bg-background'
+                    )}
+                    {...field}
+                  >
+                    {COLOR_SCHEMES.map((s) => (
+                      <option key={s.value} value={s.value}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                </FormControl>
+                <ChevronDownIcon className='absolute inset-e-3 top-2.5 h-4 w-4 opacity-50' />
+              </div>
+              <FormDescription>
+                Pick a color scheme to pair with your light/dark mode.
+              </FormDescription>
+              <FormMessage />
             </FormItem>
           )}
         />

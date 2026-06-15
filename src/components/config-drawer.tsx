@@ -1,5 +1,6 @@
 import { type SVGProps } from 'react'
 import { Root as Radio, Item } from '@radix-ui/react-radio-group'
+import { COLOR_SCHEMES } from '@/config/color-schemes'
 import { CircleCheck, RotateCcw, Settings } from 'lucide-react'
 import { IconLayoutCompact } from '@/assets/custom/icon-layout-compact'
 import { IconLayoutDefault } from '@/assets/custom/icon-layout-default'
@@ -57,6 +58,7 @@ export function ConfigDrawer() {
         </SheetHeader>
         <div className='space-y-6 overflow-y-auto px-4'>
           <ThemeConfig />
+          <ColorSchemeConfig />
           <SidebarConfig />
           <LayoutConfig />
         </div>
@@ -164,6 +166,43 @@ function RadioGroupItem({
         {item.label}
       </div>
     </Item>
+  )
+}
+
+function ColorSchemeConfig() {
+  const { resolvedTheme, colorScheme, setColorScheme, defaultColorScheme } =
+    useTheme()
+  return (
+    <div>
+      <SectionTitle
+        title='Color Scheme'
+        showReset={colorScheme !== defaultColorScheme}
+        onReset={() => setColorScheme(defaultColorScheme)}
+        resetAriaLabel='Reset color scheme to default'
+      />
+      <div className='grid grid-cols-2 gap-2'>
+        {COLOR_SCHEMES.map((s) => (
+          <button
+            key={s.value}
+            type='button'
+            onClick={() => setColorScheme(s.value)}
+            aria-label={`Select ${s.label} color scheme`}
+            aria-pressed={colorScheme === s.value}
+            className={cn(
+              'flex items-center gap-2 rounded-md border px-2 py-1.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground',
+              'ring-1 ring-border',
+              colorScheme === s.value && 'ring-2 ring-primary'
+            )}
+          >
+            <span
+              className='size-3 shrink-0 rounded-full border'
+              style={{ background: s.swatch[resolvedTheme] }}
+            />
+            <span className='truncate'>{s.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
 

@@ -41,6 +41,7 @@ describe('ConfigDrawer (integration)', () => {
 
     document.documentElement.classList.remove('light', 'dark')
     document.documentElement.removeAttribute('dir')
+    document.documentElement.removeAttribute('data-color-scheme')
   })
 
   it('opens the drawer and renders the sections', async () => {
@@ -221,6 +222,50 @@ describe('ConfigDrawer (integration)', () => {
     })
   })
 
+  describe('color scheme', () => {
+    it('selecting Catppuccin sets cookie and data-color-scheme attribute', async () => {
+      const screen = await renderConfigDrawer()
+      await openDrawer(screen)
+
+      await userEvent.click(
+        screen.getByRole('button', { name: /select catppuccin color scheme/i })
+      )
+
+      await vi.waitFor(() =>
+        expect(getCookie('vite-ui-color-scheme')).toBe('catppuccin')
+      )
+      await vi.waitFor(() =>
+        expect(document.documentElement.getAttribute('data-color-scheme')).toBe(
+          'catppuccin'
+        )
+      )
+    })
+
+    it('per-section reset clears scheme: cookie becomes "default" and attribute is removed', async () => {
+      const screen = await renderConfigDrawer()
+      await openDrawer(screen)
+
+      await userEvent.click(
+        screen.getByRole('button', { name: /select catppuccin color scheme/i })
+      )
+      await vi.waitFor(() =>
+        expect(getCookie('vite-ui-color-scheme')).toBe('catppuccin')
+      )
+
+      await userEvent.click(
+        screen.getByRole('button', { name: /reset color scheme to default/i })
+      )
+
+      await vi.waitFor(() =>
+        expect(
+          document.documentElement.getAttribute('data-color-scheme')
+        ).toBeNull()
+      )
+      // setColorScheme('default') writes the cookie value 'default'
+      expect(getCookie('vite-ui-color-scheme')).toBe('default')
+    })
+  })
+
   it('updates layout: selecting non-default closes sidebar and changes layout cookie', async () => {
     const screen = await renderConfigDrawer({ sidebarDefaultOpen: true })
 
@@ -238,7 +283,7 @@ describe('ConfigDrawer (integration)', () => {
     await vi.waitFor(() => expect(getCookie('layout_collapsible')).toBe('icon'))
   })
 
-  it('reset restores defaults across sidebar/theme/layout', async () => {
+  it('reset restores defaults across sidebar/theme/layout/color-scheme', async () => {
     const screen = await renderConfigDrawer({ sidebarDefaultOpen: true })
 
     await openDrawer(screen)
@@ -250,11 +295,17 @@ describe('ConfigDrawer (integration)', () => {
     await userEvent.click(
       screen.getByRole('radio', { name: /select full layout/i })
     )
+    await userEvent.click(
+      screen.getByRole('button', { name: /select catppuccin color scheme/i })
+    )
 
     await vi.waitFor(() => expect(getCookie('vite-ui-theme')).toBe('dark'))
     await vi.waitFor(() => expect(getCookie('layout_variant')).toBe('floating'))
     await vi.waitFor(() =>
       expect(getCookie('layout_collapsible')).toBe('offcanvas')
+    )
+    await vi.waitFor(() =>
+      expect(getCookie('vite-ui-color-scheme')).toBe('catppuccin')
     )
 
     await userEvent.click(
@@ -267,5 +318,14 @@ describe('ConfigDrawer (integration)', () => {
     await vi.waitFor(() => expect(getCookie('vite-ui-theme')).toBeUndefined())
     await vi.waitFor(() => expect(getCookie('layout_variant')).toBe('inset'))
     await vi.waitFor(() => expect(getCookie('layout_collapsible')).toBe('icon'))
+    // resetTheme calls removeCookie — cookie is gone, not set to 'default'
+    await vi.waitFor(() =>
+      expect(getCookie('vite-ui-color-scheme')).toBeUndefined()
+    )
+    await vi.waitFor(() =>
+      expect(
+        document.documentElement.getAttribute('data-color-scheme')
+      ).toBeNull()
+    )
   })
 })

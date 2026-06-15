@@ -17,3 +17,6 @@
 
 # Ignore auto generated routeTree.gen.ts
 /src/routeTree.gen.ts
+
+# Ignore auto generated color schemes (scripts/generate-color-schemes.mjs)
+/src/styles/color-schemes.css

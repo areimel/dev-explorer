@@ -14,6 +14,9 @@ const config: KnipConfig = {
     // data-table primitives are explicitly designed-for-reuse (per CLAUDE.md);
     // bulk-actions hasn't been wired into the projects table yet.
     'src/components/data-table/bulk-actions.tsx',
+    // One-shot codegen for the color schemes; run manually, not imported.
+    // See COLOR_SCHEMES.md.
+    'scripts/generate-color-schemes.mjs',
   ],
   ignoreDependencies: [
     // Loaded by Tauri runtime via plugin registration in src-tauri/src/lib.rs,
