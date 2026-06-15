@@ -1,4 +1,5 @@
 mod details;
+mod git;
 mod launch;
 mod scan;
 mod types;
@@ -15,6 +16,7 @@ pub fn run() {
             details::read_project_details,
             launch::open_with_launcher,
             launch::reveal_in_explorer,
+            git::get_git_statuses,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

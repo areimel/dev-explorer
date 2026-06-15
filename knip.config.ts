@@ -23,7 +23,6 @@ const config: KnipConfig = {
     '@tauri-apps/plugin-opener',
     // Used transitively by shadcn ui primitives in src/components/ui/**
     '@radix-ui/react-switch',
-    'date-fns',
     'input-otp',
     'react-day-picker',
   ],

@@ -1,6 +1,5 @@
 import { vi } from 'vitest'
-
-import type { DetectedProject, ProjectDetails } from '../types'
+import type { DetectedProject, GitStatus, ProjectDetails } from '../types'
 
 export const tauriCommands = {
   scanRoot: vi.fn(async (_rootPath: string): Promise<DetectedProject[]> => []),
@@ -14,4 +13,7 @@ export const tauriCommands = {
   ),
   openWithLauncher: vi.fn(async (_p: string, _t: string) => {}),
   revealInExplorer: vi.fn(async (_p: string) => {}),
+  getGitStatuses: vi.fn(
+    async (_paths: string[]): Promise<Record<string, GitStatus>> => ({})
+  ),
 }

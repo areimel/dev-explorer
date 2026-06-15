@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 
-import type { DetectedProject, ProjectDetails } from './types'
+import type { DetectedProject, GitStatus, ProjectDetails } from './types'
 
 export const tauriCommands = {
   scanRoot: (rootPath: string) =>
@@ -11,4 +11,6 @@ export const tauriCommands = {
     invoke<void>('open_with_launcher', { projectPath, commandTemplate }),
   revealInExplorer: (path: string) =>
     invoke<void>('reveal_in_explorer', { path }),
+  getGitStatuses: (paths: string[]) =>
+    invoke<Record<string, GitStatus>>('get_git_statuses', { paths }),
 }

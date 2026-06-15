@@ -55,7 +55,9 @@ fn detect_language(manifests: &[String]) -> Option<String> {
 
 /// Convert a `std::time::SystemTime` to Unix milliseconds, returning 0 on error.
 fn system_time_to_ms(t: std::time::SystemTime) -> u64 {
-    t.duration_since(UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0)
+    t.duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0)
 }
 
 #[tauri::command]

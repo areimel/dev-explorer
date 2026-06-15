@@ -7,7 +7,7 @@ import { useProjectsStore } from '@/stores/projects-store'
 import { useScanRootsStore } from '@/stores/scan-roots-store'
 import { ProjectsDialogs } from './components/projects-dialogs'
 import { ProjectsProvider } from './components/projects-provider'
-import { ProjectsTable } from './components/projects-table'
+import { ProjectsView } from './components/projects-view'
 
 export function Projects() {
   const projectsLoaded = useProjectsStore((s) => s.loaded)
@@ -39,7 +39,7 @@ export function Projects() {
             Loading projects…
           </div>
         ) : (
-          <ProjectsTable />
+          <ProjectsView />
         )}
       </Main>
 

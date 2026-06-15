@@ -24,6 +24,13 @@ export type Project = {
   lastModifiedMs: number
 }
 
+export type GitStatus = {
+  isRepo: boolean
+  branch: string | null
+  isDirty: boolean
+  detached: boolean
+}
+
 export type ScanRoot = { id: string; path: string; label?: string }
 
 export type Launcher = {

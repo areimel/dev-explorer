@@ -18,3 +18,12 @@ pub struct ProjectDetails {
     pub readme_markdown: Option<String>,
     pub last_modified_ms: u64,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GitStatus {
+    pub is_repo: bool,
+    pub branch: Option<String>,
+    pub is_dirty: bool,
+    pub detached: bool,
+}

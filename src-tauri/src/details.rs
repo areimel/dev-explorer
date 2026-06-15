@@ -17,7 +17,9 @@ const MANIFEST_NAMES: &[&str] = &[
 const README_MAX_BYTES: u64 = 65_536;
 
 fn system_time_to_ms(t: std::time::SystemTime) -> u64 {
-    t.duration_since(UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0)
+    t.duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0)
 }
 
 #[tauri::command]
@@ -55,13 +57,11 @@ pub fn read_project_details(path: String) -> Result<ProjectDetails, String> {
     let readme_path = dir.join("README.md");
     let readme_markdown = if readme_path.is_file() {
         use std::io::Read as _;
-        std::fs::File::open(&readme_path)
-            .ok()
-            .and_then(|f| {
-                let mut buf = String::new();
-                let mut limited = f.take(README_MAX_BYTES);
-                limited.read_to_string(&mut buf).ok().map(|_| buf)
-            })
+        std::fs::File::open(&readme_path).ok().and_then(|f| {
+            let mut buf = String::new();
+            let mut limited = f.take(README_MAX_BYTES);
+            limited.read_to_string(&mut buf).ok().map(|_| buf)
+        })
     } else {
         None
     };

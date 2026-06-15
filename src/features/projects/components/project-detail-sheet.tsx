@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react'
-import * as Icons from 'lucide-react'
-import { Check, Copy, FolderOpen, Pencil, Trash2 } from 'lucide-react'
-import { toast } from 'sonner'
+import {
+  Check,
+  Copy,
+  FolderOpen,
+  GitBranch,
+  Pencil,
+  Trash2,
+} from 'lucide-react'
+import { useLaunchersStore } from '@/stores/launchers-store'
+import { tauriCommands } from '@/lib/tauri/commands'
+import type { Project, ProjectDetails } from '@/lib/tauri/types'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -12,43 +21,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import { tauriCommands } from '@/lib/tauri/commands'
-import type { Launcher, Project, ProjectDetails } from '@/lib/tauri/types'
-import { useLaunchersStore } from '@/stores/launchers-store'
+import { useGitStatuses } from '../hooks/use-git-statuses'
+import { LauncherButton } from './launcher-button'
 import { useProjects } from './projects-provider'
-
-function LauncherIcon({ name }: { name: string }) {
-  const Icon = (Icons as Record<string, unknown>)[name] as
-    | React.ComponentType<{ className?: string }>
-    | undefined
-  const Resolved = Icon ?? Icons.Rocket
-  return <Resolved className='size-4' />
-}
-
-function LauncherButton({
-  launcher,
-  projectPath,
-}: {
-  launcher: Launcher
-  projectPath: string
-}) {
-  async function handleClick() {
-    await tauriCommands.openWithLauncher(projectPath, launcher.commandTemplate)
-    toast.success(`Opened with ${launcher.name}`)
-  }
-
-  return (
-    <Button
-      variant='outline'
-      size='sm'
-      className='flex items-center gap-2'
-      onClick={() => void handleClick()}
-    >
-      <LauncherIcon name={launcher.icon} />
-      {launcher.name}
-    </Button>
-  )
-}
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
@@ -83,6 +58,8 @@ function SheetBody({
 }) {
   const { setOpen, setCurrentRow } = useProjects()
   const launchers = useLaunchersStore((s) => s.launchers)
+  const { data: gitStatuses } = useGitStatuses()
+  const gitStatus = gitStatuses?.[project.path]
   const [details, setDetails] = useState<ProjectDetails | null>(null)
   const [detailsLoaded, setDetailsLoaded] = useState(false)
 
@@ -133,9 +110,9 @@ function SheetBody({
 
   return (
     <>
-      <SheetHeader className='px-6 pt-6 pb-4 border-b'>
+      <SheetHeader className='border-b px-6 pt-6 pb-4'>
         <div className='flex items-start justify-between gap-2 pr-6'>
-          <div className='flex items-center gap-2 min-w-0'>
+          <div className='flex min-w-0 items-center gap-2'>
             <SheetTitle className='truncate text-lg'>{project.name}</SheetTitle>
             <Button
               variant='ghost'
@@ -150,7 +127,7 @@ function SheetBody({
           <Button
             variant='ghost'
             size='icon'
-            className='size-7 text-destructive hover:text-destructive shrink-0'
+            className='size-7 shrink-0 text-destructive hover:text-destructive'
             onClick={openRemove}
             title='Remove project'
           >
@@ -158,9 +135,9 @@ function SheetBody({
           </Button>
         </div>
         <SheetDescription asChild>
-          <div className='flex items-center gap-1 min-w-0'>
+          <div className='flex min-w-0 items-center gap-1'>
             <span
-              className='text-xs text-muted-foreground truncate'
+              className='truncate text-xs text-muted-foreground'
               title={project.path}
             >
               {project.path}
@@ -180,21 +157,45 @@ function SheetBody({
       </SheetHeader>
 
       <ScrollArea className='flex-1'>
-        <div className='px-6 py-4 space-y-6'>
+        <div className='space-y-6 px-6 py-4'>
           {/* Metadata */}
           <div className='space-y-2'>
             <div className='flex items-center gap-2 text-sm'>
-              <span className='text-muted-foreground w-28'>Last modified</span>
+              <span className='w-28 text-muted-foreground'>Last modified</span>
               <span>{formatted}</span>
             </div>
             {project.language && (
               <div className='flex items-center gap-2 text-sm'>
-                <span className='text-muted-foreground w-28'>Language</span>
+                <span className='w-28 text-muted-foreground'>Language</span>
                 <Badge variant='secondary'>{project.language}</Badge>
               </div>
             )}
+            {gitStatus?.isRepo && (
+              <div className='flex items-center gap-2 text-sm'>
+                <span className='w-28 text-muted-foreground'>Git</span>
+                <span className='flex min-w-0 items-center gap-1.5'>
+                  <GitBranch className='size-3.5 shrink-0 text-muted-foreground' />
+                  <span
+                    className={cn(
+                      'truncate font-mono text-xs',
+                      gitStatus.detached && 'italic'
+                    )}
+                  >
+                    {gitStatus.branch ?? 'unknown'}
+                  </span>
+                  {gitStatus.isDirty && (
+                    <Badge
+                      variant='outline'
+                      className='text-xs text-amber-600 dark:text-amber-500'
+                    >
+                      Uncommitted changes
+                    </Badge>
+                  )}
+                </span>
+              </div>
+            )}
             <div className='flex items-center gap-2 text-sm'>
-              <span className='text-muted-foreground w-28'>Source</span>
+              <span className='w-28 text-muted-foreground'>Source</span>
               <Badge
                 variant={project.source === 'manual' ? 'outline' : 'default'}
               >
@@ -203,7 +204,7 @@ function SheetBody({
             </div>
             {project.manifests.length > 0 && (
               <div className='flex items-start gap-2 text-sm'>
-                <span className='text-muted-foreground w-28 pt-0.5'>
+                <span className='w-28 pt-0.5 text-muted-foreground'>
                   Manifests
                 </span>
                 <div className='flex flex-wrap gap-1'>
@@ -239,7 +240,7 @@ function SheetBody({
             {!detailsLoaded ? (
               <p className='text-sm text-muted-foreground'>Loading…</p>
             ) : details?.readmeMarkdown ? (
-              <pre className='whitespace-pre-wrap text-xs text-muted-foreground bg-muted rounded-md p-4 overflow-x-auto'>
+              <pre className='overflow-x-auto rounded-md bg-muted p-4 text-xs whitespace-pre-wrap text-muted-foreground'>
                 {details.readmeMarkdown}
               </pre>
             ) : (
@@ -262,7 +263,7 @@ export function ProjectDetailSheet({ project, open, onOpenChange }: Props) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        className='w-full sm:max-w-[640px] flex flex-col p-0'
+        className='flex w-full flex-col p-0 sm:max-w-[640px]'
         side='right'
       >
         {open && <SheetBody project={project} onOpenChange={onOpenChange} />}
