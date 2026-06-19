@@ -2,7 +2,7 @@ import { v4 as uuid } from 'uuid'
 import { create } from 'zustand'
 
 import { tauriCommands } from '@/lib/tauri/commands'
-import { tauriStore } from '@/lib/tauri/store'
+import { dbRepo } from '@/lib/tauri/db'
 import type { Project } from '@/lib/tauri/types'
 
 import { useScanRootsStore } from './scan-roots-store'
@@ -23,7 +23,7 @@ export const useProjectsStore = create<State>((set, get) => ({
   loaded: false,
   async load() {
     if (get().loaded) return
-    const projects = await tauriStore.get('projects')
+    const projects = await dbRepo.listProjects()
     set({ projects, loaded: true })
   },
   async rescanRoot(rootId) {
@@ -32,7 +32,7 @@ export const useProjectsStore = create<State>((set, get) => ({
     if (!root) return
 
     const detected = await tauriCommands.scanRoot(root.path)
-    const detectedPaths = new Set(detected.map((d) => d.path))
+    const detectedPaths = detected.map((d) => d.path)
 
     const existing = get().projects
     // Keep manual projects and scanned projects from OTHER roots untouched
@@ -63,13 +63,11 @@ export const useProjectsStore = create<State>((set, get) => ({
       }
     })
 
-    // Also keep scanned projects from this root that disappeared (filter them out)
-    // detectedPaths excludes disappeared ones — updated only contains returned paths
-    void detectedPaths // used implicitly via detected.map above
-
     const next = [...unchanged, ...updated]
     set({ projects: next })
-    await tauriStore.set('projects', next)
+    // Persist updated/new scanned projects, then prune disappeared ones
+    await dbRepo.upsertProjects(updated)
+    await dbRepo.deleteScannedProjectsForRoot(rootId, detectedPaths)
   },
   async rescanAll() {
     const { roots } = useScanRootsStore.getState()
@@ -89,19 +87,18 @@ export const useProjectsStore = create<State>((set, get) => ({
       manifests: [],
       lastModifiedMs: Date.now(),
     }
-    const next = [...get().projects, project]
-    set({ projects: next })
-    await tauriStore.set('projects', next)
+    set({ projects: [...get().projects, project] })
+    await dbRepo.upsertProject(project)
     return project
   },
   async rename(id, name) {
     const next = get().projects.map((p) => (p.id === id ? { ...p, name } : p))
     set({ projects: next })
-    await tauriStore.set('projects', next)
+    const updated = next.find((p) => p.id === id)
+    if (updated) await dbRepo.upsertProject(updated)
   },
   async remove(id) {
-    const next = get().projects.filter((p) => p.id !== id)
-    set({ projects: next })
-    await tauriStore.set('projects', next)
+    set({ projects: get().projects.filter((p) => p.id !== id) })
+    await dbRepo.deleteProject(id)
   },
 }))

@@ -1,7 +1,7 @@
 import { v4 as uuid } from 'uuid'
 import { create } from 'zustand'
 
-import { tauriStore } from '@/lib/tauri/store'
+import { dbRepo } from '@/lib/tauri/db'
 import type { Launcher } from '@/lib/tauri/types'
 
 const DEFAULT_LAUNCHERS: Launcher[] = [
@@ -40,18 +40,21 @@ export const useLaunchersStore = create<State>((set, get) => ({
   loaded: false,
   async load() {
     if (get().loaded) return
-    const stored = await tauriStore.get('launchers')
-    const launchers = stored.length > 0 ? stored : DEFAULT_LAUNCHERS
-    if (stored.length === 0) {
-      await tauriStore.set('launchers', launchers)
+    const stored = await dbRepo.listLaunchers()
+    if (stored.length > 0) {
+      set({ launchers: stored, loaded: true })
+      return
     }
-    set({ launchers, loaded: true })
+    // Seed defaults when the DB is empty
+    for (let i = 0; i < DEFAULT_LAUNCHERS.length; i++) {
+      await dbRepo.upsertLauncher(DEFAULT_LAUNCHERS[i], i)
+    }
+    set({ launchers: DEFAULT_LAUNCHERS, loaded: true })
   },
   async add(launcher) {
     const newLauncher: Launcher = { id: uuid(), ...launcher }
-    const next = [...get().launchers, newLauncher]
-    set({ launchers: next })
-    await tauriStore.set('launchers', next)
+    set({ launchers: [...get().launchers, newLauncher] })
+    await dbRepo.upsertLauncher(newLauncher)
     return newLauncher
   },
   async update(id, patch) {
@@ -59,12 +62,12 @@ export const useLaunchersStore = create<State>((set, get) => ({
       l.id === id ? { ...l, ...patch } : l
     )
     set({ launchers: next })
-    await tauriStore.set('launchers', next)
+    const updated = next.find((l) => l.id === id)
+    if (updated) await dbRepo.upsertLauncher(updated)
   },
   async remove(id) {
-    const next = get().launchers.filter((l) => l.id !== id)
-    set({ launchers: next })
-    await tauriStore.set('launchers', next)
+    set({ launchers: get().launchers.filter((l) => l.id !== id) })
+    await dbRepo.deleteLauncher(id)
   },
   async reorder(orderedIds) {
     const launcherMap = new Map(get().launchers.map((l) => [l.id, l]))
@@ -72,6 +75,6 @@ export const useLaunchersStore = create<State>((set, get) => ({
       .map((id) => launcherMap.get(id))
       .filter((l): l is Launcher => l !== undefined)
     set({ launchers: next })
-    await tauriStore.set('launchers', next)
+    await dbRepo.setLauncherOrder(orderedIds)
   },
 }))

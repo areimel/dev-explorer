@@ -1,17 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/tauri/store')
+vi.mock('@/lib/tauri/db')
 vi.mock('@/lib/tauri/commands')
 
-import { tauriStore } from '@/lib/tauri/store'
+import { dbRepo } from '@/lib/tauri/db'
 
 import { useLaunchersStore } from './launchers-store'
 
 describe('launchers-store', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(tauriStore.get).mockResolvedValue([])
-    vi.mocked(tauriStore.set).mockResolvedValue(undefined)
+    vi.mocked(dbRepo.listLaunchers).mockResolvedValue([])
+    vi.mocked(dbRepo.upsertLauncher).mockResolvedValue(undefined)
+    vi.mocked(dbRepo.deleteLauncher).mockResolvedValue(undefined)
+    vi.mocked(dbRepo.setLauncherOrder).mockResolvedValue(undefined)
     useLaunchersStore.setState({ launchers: [], loaded: false })
   })
 
@@ -21,9 +23,9 @@ describe('launchers-store', () => {
     const { launchers } = useLaunchersStore.getState()
     expect(launchers.length).toBeGreaterThan(0)
     expect(launchers.some((l) => l.name === 'VS Code')).toBe(true)
-    expect(tauriStore.set).toHaveBeenCalledWith(
-      'launchers',
-      expect.arrayContaining([expect.objectContaining({ name: 'VS Code' })])
+    expect(dbRepo.upsertLauncher).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'VS Code' }),
+      0
     )
   })
 
@@ -50,6 +52,7 @@ describe('launchers-store', () => {
     expect(
       useLaunchersStore.getState().launchers.find((l) => l.id === first.id)
     ).toBeUndefined()
+    expect(dbRepo.deleteLauncher).toHaveBeenCalledWith(first.id)
   })
 
   it('reorders launchers', async () => {
@@ -60,5 +63,6 @@ describe('launchers-store', () => {
     await useLaunchersStore.getState().reorder(reversed)
     const reordered = useLaunchersStore.getState().launchers
     expect(reordered.map((l) => l.id)).toEqual(reversed)
+    expect(dbRepo.setLauncherOrder).toHaveBeenCalledWith(reversed)
   })
 })

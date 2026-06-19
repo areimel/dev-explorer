@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/tauri/store')
+vi.mock('@/lib/tauri/db')
 vi.mock('@/lib/tauri/commands')
 
 import { tauriCommands } from '@/lib/tauri/commands'
-import { tauriStore } from '@/lib/tauri/store'
+import { dbRepo } from '@/lib/tauri/db'
 
 import { useScanRootsStore } from './scan-roots-store'
 import { useProjectsStore } from './projects-store'
@@ -15,8 +15,11 @@ const MOCK_ROOT_PATH = 'C:\\Dev'
 describe('projects-store', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(tauriStore.get).mockResolvedValue([])
-    vi.mocked(tauriStore.set).mockResolvedValue(undefined)
+    vi.mocked(dbRepo.listProjects).mockResolvedValue([])
+    vi.mocked(dbRepo.upsertProject).mockResolvedValue(undefined)
+    vi.mocked(dbRepo.upsertProjects).mockResolvedValue(undefined)
+    vi.mocked(dbRepo.deleteProject).mockResolvedValue(undefined)
+    vi.mocked(dbRepo.deleteScannedProjectsForRoot).mockResolvedValue(undefined)
     vi.mocked(tauriCommands.scanRoot).mockResolvedValue([])
     useScanRootsStore.setState({
       roots: [{ id: MOCK_ROOT_ID, path: MOCK_ROOT_PATH }],
@@ -45,8 +48,7 @@ describe('projects-store', () => {
     expect(projects[0].name).toBe('foo')
     expect(projects[0].source).toBe('scanned')
     expect(projects[0].scanRootId).toBe(MOCK_ROOT_ID)
-    expect(tauriStore.set).toHaveBeenCalledWith(
-      'projects',
+    expect(dbRepo.upsertProjects).toHaveBeenCalledWith(
       expect.arrayContaining([expect.objectContaining({ name: 'foo' })])
     )
   })
@@ -70,6 +72,10 @@ describe('projects-store', () => {
     vi.mocked(tauriCommands.scanRoot).mockResolvedValue([])
     await useProjectsStore.getState().rescanRoot(MOCK_ROOT_ID)
     expect(useProjectsStore.getState().projects).toHaveLength(0)
+    expect(dbRepo.deleteScannedProjectsForRoot).toHaveBeenCalledWith(
+      MOCK_ROOT_ID,
+      []
+    )
   })
 
   it('preserves manual projects across rescan', async () => {
@@ -101,5 +107,8 @@ describe('projects-store', () => {
     const { projects } = useProjectsStore.getState()
     await useProjectsStore.getState().rename(projects[0].id, 'My Foo')
     expect(useProjectsStore.getState().projects[0].name).toBe('My Foo')
+    expect(dbRepo.upsertProject).toHaveBeenCalledWith(
+      expect.objectContaining({ id: projects[0].id, name: 'My Foo' })
+    )
   })
 })
