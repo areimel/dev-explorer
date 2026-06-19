@@ -25,14 +25,14 @@ export function ProjectCardLaunchers({ projectPath }: { projectPath: string }) {
   }
 
   return (
-    <div className='flex gap-2'>
+    <div className='flex flex-col gap-2'>
       {primary.map((launcher) => (
         <LauncherButton
           key={launcher.id}
           launcher={launcher}
           projectPath={projectPath}
           variant='secondary'
-          className='flex h-9 flex-1 items-center justify-center gap-1.5 truncate'
+          className='flex h-9 w-full items-center justify-start gap-2 rounded-none truncate'
         />
       ))}
       {overflow.length > 0 && (
@@ -40,11 +40,11 @@ export function ProjectCardLaunchers({ projectPath }: { projectPath: string }) {
           <DropdownMenuTrigger asChild>
             <Button
               variant='outline'
-              size='icon'
-              className='h-9 w-9 shrink-0'
+              className='h-9 w-full justify-start gap-2 rounded-none'
               onClick={(e) => e.stopPropagation()}
             >
               <MoreHorizontal className='size-4' />
+              <span>More…</span>
               <span className='sr-only'>More launchers</span>
             </Button>
           </DropdownMenuTrigger>
