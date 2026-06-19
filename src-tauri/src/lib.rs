@@ -1,3 +1,4 @@
+mod cards;
 mod details;
 mod git;
 mod launch;
@@ -17,6 +18,7 @@ pub fn run() {
             launch::open_with_launcher,
             launch::reveal_in_explorer,
             git::get_git_statuses,
+            cards::get_project_cards_meta,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

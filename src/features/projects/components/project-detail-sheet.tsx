@@ -1,12 +1,5 @@
 import { useEffect, useState } from 'react'
-import {
-  Check,
-  Copy,
-  FolderOpen,
-  GitBranch,
-  Pencil,
-  Trash2,
-} from 'lucide-react'
+import { FolderOpen, GitBranch, Pencil, Trash2 } from 'lucide-react'
 import { useLaunchersStore } from '@/stores/launchers-store'
 import { tauriCommands } from '@/lib/tauri/commands'
 import type { Project, ProjectDetails } from '@/lib/tauri/types'
@@ -22,30 +15,9 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { useGitStatuses } from '../hooks/use-git-statuses'
+import { CopyButton } from './copy-button'
 import { LauncherButton } from './launcher-button'
 import { useProjects } from './projects-provider'
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false)
-
-  async function handleCopy() {
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
-
-  return (
-    <Button
-      variant='ghost'
-      size='icon'
-      className='size-7'
-      onClick={() => void handleCopy()}
-      title='Copy path'
-    >
-      {copied ? <Check className='size-3.5' /> : <Copy className='size-3.5' />}
-    </Button>
-  )
-}
 
 // Inner component: mounted only while the sheet is open (via conditional render in parent)
 // This avoids needing setState-in-effect guards around async loading.
@@ -142,7 +114,7 @@ function SheetBody({
             >
               {project.path}
             </span>
-            <CopyButton text={project.path} />
+            <CopyButton text={project.path} title='Copy path' />
             <Button
               variant='ghost'
               size='icon'

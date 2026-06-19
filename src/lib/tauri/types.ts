@@ -31,6 +31,14 @@ export type GitStatus = {
   detached: boolean
 }
 
+export type ProjectCardMeta = {
+  path: string
+  // `.git/description` (when not git's default placeholder), else a README excerpt
+  description: string | null
+  // "data:image/...;base64,..." for an auto-detected repo image, else null
+  thumbnailDataUri: string | null
+}
+
 export type ScanRoot = { id: string; path: string; label?: string }
 
 export type Launcher = {

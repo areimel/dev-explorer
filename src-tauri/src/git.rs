@@ -45,7 +45,7 @@ pub fn parse_head(content: &str) -> (Option<String>, bool) {
 
 /// Resolve the actual git directory for a project path.
 /// Returns `None` if this is not a git repo.
-fn resolve_git_dir(project_path: &Path) -> Option<PathBuf> {
+pub(crate) fn resolve_git_dir(project_path: &Path) -> Option<PathBuf> {
     let dot_git = project_path.join(".git");
 
     if dot_git.is_dir() {

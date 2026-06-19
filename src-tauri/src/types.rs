@@ -27,3 +27,11 @@ pub struct GitStatus {
     pub is_dirty: bool,
     pub detached: bool,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectCardMeta {
+    pub path: String,
+    pub description: Option<String>,
+    pub thumbnail_data_uri: Option<String>,
+}
