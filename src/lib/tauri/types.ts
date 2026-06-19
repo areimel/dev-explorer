@@ -47,3 +47,33 @@ export type Launcher = {
   icon: string // lucide icon name
   commandTemplate: string // contains "{path}"
 }
+
+// --- Schema introspection types (used by the DB schema viewer page) ---
+
+export type SchemaColumn = {
+  name: string
+  type: string
+  notNull: boolean
+  primaryKey: boolean
+  defaultValue: string | null
+}
+
+export type SchemaForeignKey = {
+  column: string
+  refTable: string
+  refColumn: string
+  onDelete: string
+}
+
+export type SchemaIndex = {
+  name: string
+  unique: boolean
+  columns: string[]
+}
+
+export type TableSchema = {
+  name: string
+  columns: SchemaColumn[]
+  foreignKeys: SchemaForeignKey[]
+  indexes: SchemaIndex[]
+}
