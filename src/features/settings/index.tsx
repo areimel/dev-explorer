@@ -1,5 +1,5 @@
 import { Outlet } from '@tanstack/react-router'
-import { FolderTree, Palette, Rocket } from 'lucide-react'
+import { Database, FolderTree, Palette, Rocket } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
@@ -23,6 +23,11 @@ const sidebarNavItems = [
     title: 'Appearance',
     href: '/settings/appearance',
     icon: <Palette size={18} />,
+  },
+  {
+    title: 'Database Schema',
+    href: '/settings/schema',
+    icon: <Database size={18} />,
   },
 ]
 

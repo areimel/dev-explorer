@@ -1,4 +1,11 @@
-import { FolderGit2, FolderTree, Palette, Rocket, Settings } from 'lucide-react'
+import {
+  Database,
+  FolderGit2,
+  FolderTree,
+  Palette,
+  Rocket,
+  Settings,
+} from 'lucide-react'
 import type { SidebarData } from '../types'
 
 export const sidebarData: SidebarData = {
@@ -19,6 +26,11 @@ export const sidebarData: SidebarData = {
             { title: 'Scan Roots', url: '/settings/scan-roots', icon: FolderTree },
             { title: 'Launchers', url: '/settings/launchers', icon: Rocket },
             { title: 'Appearance', url: '/settings/appearance', icon: Palette },
+            {
+              title: 'Database Schema',
+              url: '/settings/schema',
+              icon: Database,
+            },
           ],
         },
       ],

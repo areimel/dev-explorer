@@ -19,6 +19,7 @@ import { Route as errors401RouteImport } from './routes/(errors)/401'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects/index'
+import { Route as AuthenticatedSettingsSchemaRouteImport } from './routes/_authenticated/settings/schema'
 import { Route as AuthenticatedSettingsScanRootsRouteImport } from './routes/_authenticated/settings/scan-roots'
 import { Route as AuthenticatedSettingsLaunchersRouteImport } from './routes/_authenticated/settings/launchers'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
@@ -76,6 +77,12 @@ const AuthenticatedProjectsIndexRoute =
     path: '/projects/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsSchemaRoute =
+  AuthenticatedSettingsSchemaRouteImport.update({
+    id: '/schema',
+    path: '/schema',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
 const AuthenticatedSettingsScanRootsRoute =
   AuthenticatedSettingsScanRootsRouteImport.update({
     id: '/scan-roots',
@@ -113,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/launchers': typeof AuthenticatedSettingsLaunchersRoute
   '/settings/scan-roots': typeof AuthenticatedSettingsScanRootsRoute
+  '/settings/schema': typeof AuthenticatedSettingsSchemaRoute
   '/projects/': typeof AuthenticatedProjectsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
 }
@@ -127,6 +135,7 @@ export interface FileRoutesByTo {
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/launchers': typeof AuthenticatedSettingsLaunchersRoute
   '/settings/scan-roots': typeof AuthenticatedSettingsScanRootsRoute
+  '/settings/schema': typeof AuthenticatedSettingsSchemaRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
 }
@@ -144,6 +153,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/launchers': typeof AuthenticatedSettingsLaunchersRoute
   '/_authenticated/settings/scan-roots': typeof AuthenticatedSettingsScanRootsRoute
+  '/_authenticated/settings/schema': typeof AuthenticatedSettingsSchemaRoute
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
 }
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/launchers'
     | '/settings/scan-roots'
+    | '/settings/schema'
     | '/projects/'
     | '/settings/'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/launchers'
     | '/settings/scan-roots'
+    | '/settings/schema'
     | '/projects'
     | '/settings'
   id:
@@ -191,6 +203,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/launchers'
     | '/_authenticated/settings/scan-roots'
+    | '/_authenticated/settings/schema'
     | '/_authenticated/projects/'
     | '/_authenticated/settings/'
   fileRoutesById: FileRoutesById
@@ -276,6 +289,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/schema': {
+      id: '/_authenticated/settings/schema'
+      path: '/schema'
+      fullPath: '/settings/schema'
+      preLoaderRoute: typeof AuthenticatedSettingsSchemaRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/settings/scan-roots': {
       id: '/_authenticated/settings/scan-roots'
       path: '/scan-roots'
@@ -311,6 +331,7 @@ interface AuthenticatedSettingsRouteRouteChildren {
   AuthenticatedSettingsAppearanceRoute: typeof AuthenticatedSettingsAppearanceRoute
   AuthenticatedSettingsLaunchersRoute: typeof AuthenticatedSettingsLaunchersRoute
   AuthenticatedSettingsScanRootsRoute: typeof AuthenticatedSettingsScanRootsRoute
+  AuthenticatedSettingsSchemaRoute: typeof AuthenticatedSettingsSchemaRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
@@ -319,6 +340,7 @@ const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteCh
     AuthenticatedSettingsAppearanceRoute: AuthenticatedSettingsAppearanceRoute,
     AuthenticatedSettingsLaunchersRoute: AuthenticatedSettingsLaunchersRoute,
     AuthenticatedSettingsScanRootsRoute: AuthenticatedSettingsScanRootsRoute,
+    AuthenticatedSettingsSchemaRoute: AuthenticatedSettingsSchemaRoute,
     AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   }
 
