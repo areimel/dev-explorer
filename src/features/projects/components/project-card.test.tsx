@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { useLaunchersStore } from '@/stores/launchers-store'
 import { tauriCommands } from '@/lib/tauri/commands'
-import type { GitStatus, Launcher, Project } from '@/lib/tauri/types'
+import type { GitStatus, Launcher, Project, ProjectCardMeta } from '@/lib/tauri/types'
 import { ProjectCard } from './project-card'
 import { ProjectsProvider, useProjects } from './projects-provider'
 
@@ -61,17 +61,27 @@ const GIT_NOT_REPO: GitStatus = {
   detached: false,
 }
 
+const MOCK_CARD_META: ProjectCardMeta = {
+  path: 'C:\\Dev\\my-app',
+  description: null,
+  thumbnailDataUri: null,
+}
+
 async function renderCard(
   props: {
     project?: Project
     gitStatus?: GitStatus | undefined
     gitLoading?: boolean
+    cardMeta?: ProjectCardMeta | undefined
+    metaLoading?: boolean
   } = {}
 ) {
   const {
     project = MOCK_PROJECT,
     gitStatus = GIT_CLEAN,
     gitLoading = false,
+    cardMeta = MOCK_CARD_META,
+    metaLoading = false,
   } = props
   return await render(
     <ProjectsProvider>
@@ -79,6 +89,8 @@ async function renderCard(
         project={project}
         gitStatus={gitStatus}
         gitLoading={gitLoading}
+        cardMeta={cardMeta}
+        metaLoading={metaLoading}
       />
     </ProjectsProvider>
   )
@@ -91,35 +103,21 @@ describe('ProjectCard', () => {
     useLaunchersStore.setState({ launchers: MOCK_LAUNCHERS, loaded: true })
   })
 
-  it('renders name, path, language badge, source badge, manifest badges, relative time', async () => {
+  it('renders name, path, language, and relative time', async () => {
     const screen = await renderCard()
 
-    // Name is in a span (not the path paragraph which also contains 'my-app')
+    // Name is in a span (card has role=button whose accessible name contains 'my-app')
     await expect
       .element(screen.getByRole('button', { name: /my-app/i }))
       .toBeInTheDocument()
-    // Path is in font-mono paragraph
+    // Path is in font-mono span
     await expect
       .element(screen.getByText('C:\\Dev\\my-app', { exact: true }))
       .toBeInTheDocument()
+    // Language shown on the card (thumbnail placeholder label + datasheet meta
+    // strip both render it, so assert at least the first occurrence)
     await expect
-      .element(screen.getByText('TypeScript', { exact: true }))
-      .toBeInTheDocument()
-    await expect
-      .element(screen.getByText('scanned', { exact: true }))
-      .toBeInTheDocument()
-    await expect
-      .element(screen.getByText('package.json', { exact: true }))
-      .toBeInTheDocument()
-    await expect
-      .element(screen.getByText('tsconfig.json', { exact: true }))
-      .toBeInTheDocument()
-    await expect
-      .element(screen.getByText('vite.config.ts', { exact: true }))
-      .toBeInTheDocument()
-    // 4th manifest is overflowed
-    await expect
-      .element(screen.getByText('+1', { exact: true }))
+      .element(screen.getByText('TypeScript', { exact: true }).first())
       .toBeInTheDocument()
     // relative time — matches "ago" suffix
     await expect.element(screen.getByText(/ago/i)).toBeInTheDocument()
@@ -191,10 +189,14 @@ describe('ProjectCard', () => {
     await expect
       .element(screen.getByRole('button', { name: 'Explorer', exact: true }))
       .toBeInTheDocument()
-    // Overflow button (MoreHorizontal) — use exact name to avoid matching card button
+    // Overflow button (MoreHorizontal) — exact name disambiguates it from the
+    // card's role=button, whose accessible name also contains this text
     await expect
       .element(
-        screen.getByRole('button', { name: 'More launchers', exact: true })
+        screen.getByRole('button', {
+          name: 'More…More launchers',
+          exact: true,
+        })
       )
       .toBeInTheDocument()
     // The 4th launcher (Cursor) should NOT be a visible primary button
@@ -218,6 +220,8 @@ describe('ProjectCard', () => {
           project={MOCK_PROJECT}
           gitStatus={GIT_CLEAN}
           gitLoading={false}
+          cardMeta={MOCK_CARD_META}
+          metaLoading={false}
         />
         <OpenProbe />
       </ProjectsProvider>
