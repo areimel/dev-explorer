@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { FontProvider } from './context/font-provider'
 import { ThemeProvider } from './context/theme-provider'
-import { dbRepo } from './lib/tauri/db'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
 // Styles
@@ -33,11 +32,6 @@ declare module '@tanstack/react-router' {
     router: typeof router
   }
 }
-
-// One-time idempotent migration from legacy tauriStore JSON to SQLite.
-// Runs before any store.load() can execute. Errors are swallowed so a
-// non-Tauri (browser/test) context never blocks rendering.
-await dbRepo.migrateFromStore().catch(() => {})
 
 // Render the app
 const rootElement = document.getElementById('root')!

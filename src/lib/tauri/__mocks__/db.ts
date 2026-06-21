@@ -21,6 +21,5 @@ export const dbRepo = {
   setLauncherOrder: vi.fn(async (_orderedIds: string[]): Promise<void> => {}),
   getMeta: vi.fn(async (_key: string): Promise<string | null> => null),
   setMeta: vi.fn(async (_key: string, _value: string): Promise<void> => {}),
-  migrateFromStore: vi.fn(async (): Promise<void> => {}),
   getSchema: vi.fn(async () => []),
 }

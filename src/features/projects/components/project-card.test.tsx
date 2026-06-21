@@ -7,7 +7,7 @@ import { ProjectCard } from './project-card'
 import { ProjectsProvider, useProjects } from './projects-provider'
 
 vi.mock('@/lib/tauri/commands')
-vi.mock('@/lib/tauri/store')
+vi.mock('@/lib/tauri/db')
 
 const MOCK_PROJECT: Project = {
   id: 'proj-1',
