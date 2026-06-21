@@ -13,17 +13,18 @@ The codebase was forked from the **Shadcn Admin Dashboard** template (Vite + Rea
 ## Architecture / product shape
 
 - **Frontend:** Vite + React 19 + TypeScript SPA, TanStack Router (file-based), shadcn/ui, Tailwind v4. Path alias `@` → `src`.
-- **Desktop shell:** Tauri 2 (Rust backend). **Not yet scaffolded** — adding Tauri is the next major work item. Once added, FS access, shell launching, and (Phase 2) git ops will live behind Tauri commands; the frontend never spawns shells directly.
+- **Desktop shell:** Tauri 2.11 (Rust backend), **scaffolded** under `src-tauri/`. FS access, shell launching, project scanning, git status, and card metadata all live behind Tauri commands (see `src-tauri/src/{scan,details,launch,git,cards}.rs`); the frontend never spawns shells directly. Frontend calls go through typed wrappers in `src/lib/tauri/`.
 - **Discovery model:** users register one or more **scan roots** (parent directories like `C:\Users\Alec\Dev\personal`); the app indexes projects under each root using heuristics (`.git`, recognized manifest files). Manual "Add project" is also supported for folders outside scan roots.
 - **Launchers:** "Open in VS Code / Terminal / File Explorer / ..." are user-configurable command templates with a `{path}` placeholder, executed via Tauri.
 - **No auth.** Dev Explorer is a single-user local desktop app. The template's auth flow and Clerk demo are legacy and being removed.
-- **Persistence:** local app data via Tauri (JSON-vs-SQLite TBD). Stores scan roots, launcher config, manual projects, project overrides.
+- **Persistence:** local **SQLite** database (`sqlite:devexplorer.db`) via `tauri-plugin-sql`. Schema is defined as Rust migrations in `src-tauri/src/migrations.rs`; all reads/writes go through the typed repository layer `src/lib/tauri/db.ts` (`dbRepo`). Stores scan roots, launcher config, projects, project overrides, and app metadata. See "Persistence (SQLite)" below.
 
 ## Commands
 
 Package manager is **pnpm**.
 
-- `pnpm dev` — Vite dev server (browser-only; once Tauri is wired up, prefer `pnpm tauri dev`)
+- `pnpm dev` — Vite dev server (browser-only; for the full desktop app prefer `pnpm tauri dev`, which also runs the Rust backend)
+- `pnpm tauri dev` / `pnpm tauri build` — run / bundle the desktop app (requires a Rust toolchain: rustup + stable)
 - `pnpm build` — `tsc -b && vite build` (type errors fail the build)
 - `pnpm lint` — ESLint over the repo
 - `pnpm format` / `pnpm format:check` — Prettier (also reorders imports per `.prettierrc` `importOrder`)
@@ -33,7 +34,7 @@ Package manager is **pnpm**.
 - `pnpm test:browser:install` — **must be run once** before tests work; installs the Playwright Chromium binary
 - Single test file: `pnpm vitest run src/path/to/foo.test.ts` (add `-t "name"` to filter by test name)
 
-Tauri commands (e.g. `pnpm tauri dev`, `pnpm tauri build`) will be added when the Rust shell is scaffolded. A working Rust toolchain (rustup + stable) will be a prerequisite at that point.
+The Rust shell is scaffolded under `src-tauri/`. `cargo check --manifest-path src-tauri/Cargo.toml` type-checks the backend; a working Rust toolchain (rustup + stable) is a development prerequisite.
 
 ## Routing (TanStack Router, file-based)
 
@@ -49,7 +50,7 @@ Tauri commands (e.g. `pnpm tauri dev`, `pnpm tauri build`) will be added when th
 ## State and data flow
 
 - A single `QueryClient` is configured in `src/main.tsx`. Its current 401-redirect / auth-reset behavior is **template legacy** and will be simplified once auth is removed.
-- Local app state will live in Zustand stores backed by Tauri-persisted JSON/SQLite. The existing `src/stores/auth-store.ts` is legacy and will be removed.
+- Local app state lives in Zustand stores (`src/stores/{projects,scan-roots,launchers}-store.ts`) backed by SQLite through `dbRepo` (`src/lib/tauri/db.ts`). The existing `src/stores/auth-store.ts` is legacy and will be removed.
 - Provider order in `src/main.tsx`: `QueryClientProvider` → `ThemeProvider` → `FontProvider` → `DirectionProvider` → `RouterProvider`. Theme + Font providers stay; whether to keep `DirectionProvider` (RTL) is an open question (see PRD).
 
 ## Features
@@ -97,14 +98,23 @@ If browser tests fail to launch with a Playwright/Chromium error on a fresh chec
 
 Note: tests run in a real browser, but the product targets Tauri's webview. For Tauri-specific code paths (commands, FS access), prefer thin frontend wrappers that can be mocked at the boundary so tests stay browser-friendly.
 
-## Tauri (planned)
+## Tauri
 
-When Tauri is scaffolded:
+Tauri 2.11 is scaffolded under `src-tauri/` (default layout):
 
-- Rust source will live in `src-tauri/` (default Tauri layout)
-- `tauri.conf.json` controls window, bundle, and allowlist settings
-- Tauri commands are the only path from frontend to OS-level operations (FS, shell). Treat the boundary like an API: typed wrappers in `src/lib/tauri/` will keep frontend code testable without a running Tauri runtime.
-- A Rust toolchain (rustup, stable channel) becomes a development prerequisite
+- Rust source in `src-tauri/src/`: `lib.rs` registers plugins (`fs`, `shell`, `opener`, `sql`, `log`) and the `invoke_handler` commands; the command modules are `scan.rs`, `details.rs`, `launch.rs`, `git.rs`, `cards.rs`, with shared `types.rs` and DB `migrations.rs`.
+- `tauri.conf.json` controls window/bundle config; `src-tauri/capabilities/default.json` is the permission allowlist (fs/shell/opener/sql scopes).
+- Tauri commands are the only path from frontend to OS-level operations (FS, shell, DB). The boundary is treated like an API: typed wrappers in `src/lib/tauri/` (`commands.ts`, `db.ts`) keep frontend code testable without a running Tauri runtime. Each wrapper has a manual mock in `src/lib/tauri/__mocks__/` so tests `vi.mock('@/lib/tauri/commands')` / `vi.mock('@/lib/tauri/db')` at the boundary.
+- A Rust toolchain (rustup, stable channel) is a development prerequisite.
+
+## Persistence (SQLite)
+
+App data is stored in a local SQLite database (`sqlite:devexplorer.db`, in the app config dir) via `tauri-plugin-sql`.
+
+- **Schema** is defined as immutable Rust migrations in `src-tauri/src/migrations.rs`. v1 creates 5 tables: `scan_roots`, `projects`, `launchers`, `project_overrides`, `app_meta`. All use TEXT UUID primary keys + `created_at`/`updated_at` epoch-ms columns (sync-ready). **Migration SQL is immutable once shipped** — schema changes require a new `Migration{ version: N, ... }`, never edits to an existing one.
+- **Repository layer:** `src/lib/tauri/db.ts` exports `dbRepo` — all queries live here, with snake_case↔camelCase row mappers. It lazily opens the DB (`Database.load`) and issues `PRAGMA foreign_keys = ON` per connection (FK enforcement is per-connection in SQLite — never put it in migration SQL).
+- **Schema reference page:** Settings → Database Schema (`src/features/settings/schema/index.tsx`) renders the live schema via `dbRepo.getSchema()` (PRAGMA introspection).
+- The app was previously on `tauri-plugin-store` (a single `settings.json`); that has been fully removed in favor of SQLite.
 
 ## Template legacy (to be removed)
 
@@ -120,5 +130,5 @@ When unsure whether a piece of code is "template" or "product": if removing it w
 ## Environment
 
 - `.env` (gitignored): currently configures Clerk (`VITE_CLERK_PUBLISHABLE_KEY`); will be removed with the Clerk integration
-- `netlify.toml` exists from the template (SPA fallback). **Dev Explorer is a desktop app; web hosting is not a deployment target.** This file may be removed once Tauri is wired up
-- Future: `tauri.conf.json` will hold desktop app config (window, bundle, allowlist)
+- `netlify.toml` exists from the template (SPA fallback). **Dev Explorer is a desktop app; web hosting is not a deployment target.** This file is a candidate for removal.
+- `src-tauri/tauri.conf.json` holds desktop app config (window, bundle); `src-tauri/capabilities/default.json` holds the permission allowlist.
