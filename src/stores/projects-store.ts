@@ -20,6 +20,7 @@ type State = {
   remove: (id: string) => Promise<void>
   togglePin: (id: string) => Promise<void>
   recordOpen: (id: string) => Promise<void>
+  recordOpenByPath: (path: string) => Promise<void>
 }
 
 const RECENT_LIMIT = 12
@@ -131,5 +132,10 @@ export const useProjectsStore = create<State>((set, get) => ({
     await dbRepo.touchOpened(id)
     const recentIds = await dbRepo.getRecentlyOpened(RECENT_LIMIT)
     set({ recentIds })
+  },
+  async recordOpenByPath(path) {
+    const project = get().projects.find((p) => p.path === path)
+    if (!project) return
+    await get().recordOpen(project.id)
   },
 }))

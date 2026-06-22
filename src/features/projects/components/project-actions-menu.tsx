@@ -1,4 +1,5 @@
-import { MoreHorizontal } from 'lucide-react'
+import { MoreHorizontal, Pin, PinOff } from 'lucide-react'
+import { useProjectsStore } from '@/stores/projects-store'
 import { tauriCommands } from '@/lib/tauri/commands'
 import type { Project } from '@/lib/tauri/types'
 import { Button } from '@/components/ui/button'
@@ -19,6 +20,11 @@ export function ProjectActionsMenu({
   className?: string
 }) {
   const { setOpen, setCurrentRow } = useProjects()
+  const isPinned = useProjectsStore((s) => s.pinnedIds.includes(project.id))
+
+  function togglePin() {
+    void useProjectsStore.getState().togglePin(project.id)
+  }
 
   function openDetail() {
     setCurrentRow(project)
@@ -49,6 +55,19 @@ export function ProjectActionsMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end'>
         <DropdownMenuItem onClick={openDetail}>Open detail</DropdownMenuItem>
+        <DropdownMenuItem onClick={togglePin}>
+          {isPinned ? (
+            <>
+              <PinOff className='size-4' />
+              Unpin
+            </>
+          ) : (
+            <>
+              <Pin className='size-4' />
+              Pin
+            </>
+          )}
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={openEditName}>Edit name</DropdownMenuItem>
         <DropdownMenuItem onClick={() => void reveal()}>
           Reveal in Explorer

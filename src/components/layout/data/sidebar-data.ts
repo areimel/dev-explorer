@@ -2,6 +2,8 @@ import {
   Database,
   FolderGit2,
   FolderTree,
+  GitBranch,
+  Package,
   Palette,
   Rocket,
   Settings,
@@ -25,6 +27,8 @@ export const sidebarData: SidebarData = {
           items: [
             { title: 'Scan Roots', url: '/settings/scan-roots', icon: FolderTree },
             { title: 'Launchers', url: '/settings/launchers', icon: Rocket },
+            { title: 'Templates', url: '/settings/templates', icon: Package },
+            { title: 'GitHub', url: '/settings/github', icon: GitBranch },
             { title: 'Appearance', url: '/settings/appearance', icon: Palette },
             {
               title: 'Database Schema',
