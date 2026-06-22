@@ -15,7 +15,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { useGitStatuses } from '../hooks/use-git-statuses'
-import { CopyButton } from './copy-button'
+import { CopyButton } from '@/components/copy-button'
 import { LauncherButton } from './launcher-button'
 import { useProjects } from './projects-provider'
 

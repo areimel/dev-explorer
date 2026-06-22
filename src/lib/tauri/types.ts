@@ -77,3 +77,32 @@ export type TableSchema = {
   foreignKeys: SchemaForeignKey[]
   indexes: SchemaIndex[]
 }
+
+export type Template = {
+  id: string
+  name: string
+  description: string
+  repoUrl: string
+  language: string | null
+  tags: string[]
+}
+
+export type GitHubProfile = {
+  login: string
+  name: string | null
+  avatarUrl: string
+  bio: string | null
+  publicRepos: number
+  followers: number
+  following: number
+  htmlUrl: string
+  location: string | null
+  company: string | null
+}
+
+export type ContributionDay = { date: string; count: number; level: number }
+export type ContributionWeek = { days: ContributionDay[] }
+export type ContributionCalendar = {
+  totalContributions: number
+  weeks: ContributionWeek[]
+}

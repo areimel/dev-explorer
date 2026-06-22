@@ -1,5 +1,12 @@
 import { vi } from 'vitest'
-import type { DetectedProject, GitStatus, ProjectDetails } from '../types'
+import type {
+  ContributionCalendar,
+  DetectedProject,
+  GitHubProfile,
+  GitStatus,
+  ProjectCardMeta,
+  ProjectDetails,
+} from '../types'
 
 export const tauriCommands = {
   scanRoot: vi.fn(async (_rootPath: string): Promise<DetectedProject[]> => []),
@@ -15,5 +22,34 @@ export const tauriCommands = {
   revealInExplorer: vi.fn(async (_p: string) => {}),
   getGitStatuses: vi.fn(
     async (_paths: string[]): Promise<Record<string, GitStatus>> => ({})
+  ),
+  getProjectCardsMeta: vi.fn(
+    async (_paths: string[]): Promise<Record<string, ProjectCardMeta>> => ({})
+  ),
+  githubGetProfile: vi.fn(
+    async (
+      _username: string,
+      _token: string | null
+    ): Promise<GitHubProfile> => ({
+      login: _username,
+      name: null,
+      avatarUrl: '',
+      bio: null,
+      publicRepos: 0,
+      followers: 0,
+      following: 0,
+      htmlUrl: `https://github.com/${_username}`,
+      location: null,
+      company: null,
+    })
+  ),
+  githubGetContributions: vi.fn(
+    async (
+      _username: string,
+      _token: string
+    ): Promise<ContributionCalendar> => ({
+      totalContributions: 0,
+      weeks: [],
+    })
   ),
 }
