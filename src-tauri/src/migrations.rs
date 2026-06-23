@@ -75,5 +75,13 @@ CREATE TABLE templates (
 CREATE INDEX idx_templates_sort_order ON templates(sort_order);
 ",
         kind: MigrationKind::Up,
+    },
+    Migration {
+        version: 3,
+        description: "project_overrides_is_template",
+        sql: "
+ALTER TABLE project_overrides ADD COLUMN is_template INTEGER NOT NULL DEFAULT 0;
+",
+        kind: MigrationKind::Up,
     }]
 }

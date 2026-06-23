@@ -1,5 +1,4 @@
 import { vi } from 'vitest'
-
 import type { Launcher, Project, ScanRoot, Template } from '../types'
 
 export const dbRepo = {
@@ -25,8 +24,14 @@ export const dbRepo = {
   ),
   deleteTemplate: vi.fn(async (_id: string): Promise<void> => {}),
   setTemplateOrder: vi.fn(async (_orderedIds: string[]): Promise<void> => {}),
-  setPinned: vi.fn(async (_projectId: string, _pinned: boolean): Promise<void> => {}),
+  setPinned: vi.fn(
+    async (_projectId: string, _pinned: boolean): Promise<void> => {}
+  ),
   getPinnedIds: vi.fn(async (): Promise<string[]> => []),
+  setTemplateFlag: vi.fn(
+    async (_projectId: string, _isTemplate: boolean): Promise<void> => {}
+  ),
+  getTemplateProjectIds: vi.fn(async (): Promise<string[]> => []),
   touchOpened: vi.fn(async (_projectId: string): Promise<void> => {}),
   getRecentlyOpened: vi.fn(async (_limit: number): Promise<string[]> => []),
   getMeta: vi.fn(async (_key: string): Promise<string | null> => null),

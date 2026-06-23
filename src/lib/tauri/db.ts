@@ -1,5 +1,4 @@
 import Database from '@tauri-apps/plugin-sql'
-
 import type {
   Launcher,
   Project,
@@ -441,7 +440,17 @@ export const dbRepo = {
          sort_order  = CASE WHEN $7 = ${Number.MAX_SAFE_INTEGER} THEN templates.sort_order ELSE excluded.sort_order END,
          created_at  = templates.created_at,
          updated_at  = $9`,
-      [t.id, t.name, t.description, t.repoUrl, t.language, JSON.stringify(t.tags), order, now, now]
+      [
+        t.id,
+        t.name,
+        t.description,
+        t.repoUrl,
+        t.language,
+        JSON.stringify(t.tags),
+        order,
+        now,
+        now,
+      ]
     )
   },
 
@@ -491,6 +500,27 @@ export const dbRepo = {
     const db = await getDb()
     const rows = await db.select<{ project_id: string }[]>(
       'SELECT project_id FROM project_overrides WHERE pinned = 1'
+    )
+    return rows.map((r) => r.project_id)
+  },
+
+  async setTemplateFlag(projectId: string, isTemplate: boolean): Promise<void> {
+    const db = await getDb()
+    const now = Date.now()
+    await db.execute(
+      `INSERT INTO project_overrides (project_id, is_template, created_at, updated_at)
+       VALUES ($1, $2, $3, $3)
+       ON CONFLICT(project_id) DO UPDATE SET
+         is_template = excluded.is_template,
+         updated_at  = $3`,
+      [projectId, isTemplate ? 1 : 0, now]
+    )
+  },
+
+  async getTemplateProjectIds(): Promise<string[]> {
+    const db = await getDb()
+    const rows = await db.select<{ project_id: string }[]>(
+      'SELECT project_id FROM project_overrides WHERE is_template = 1'
     )
     return rows.map((r) => r.project_id)
   },
