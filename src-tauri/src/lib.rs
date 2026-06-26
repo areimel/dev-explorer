@@ -1,6 +1,7 @@
 mod cards;
 mod details;
 mod git;
+mod github;
 mod launch;
 mod migrations;
 mod scan;
@@ -23,6 +24,8 @@ pub fn run() {
             launch::open_with_launcher,
             launch::reveal_in_explorer,
             git::get_git_statuses,
+            github::github_get_profile,
+            github::github_get_contributions,
             cards::get_project_cards_meta,
         ])
         .run(tauri::generate_context!())

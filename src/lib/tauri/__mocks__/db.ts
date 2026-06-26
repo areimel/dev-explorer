@@ -1,6 +1,5 @@
 import { vi } from 'vitest'
-
-import type { Launcher, Project, ScanRoot } from '../types'
+import type { Launcher, Project, ScanRoot, Template } from '../types'
 
 export const dbRepo = {
   listProjects: vi.fn(async (): Promise<Project[]> => []),
@@ -19,6 +18,22 @@ export const dbRepo = {
   ),
   deleteLauncher: vi.fn(async (_id: string): Promise<void> => {}),
   setLauncherOrder: vi.fn(async (_orderedIds: string[]): Promise<void> => {}),
+  listTemplates: vi.fn(async (): Promise<Template[]> => []),
+  upsertTemplate: vi.fn(
+    async (_t: Template, _sortOrder?: number): Promise<void> => {}
+  ),
+  deleteTemplate: vi.fn(async (_id: string): Promise<void> => {}),
+  setTemplateOrder: vi.fn(async (_orderedIds: string[]): Promise<void> => {}),
+  setPinned: vi.fn(
+    async (_projectId: string, _pinned: boolean): Promise<void> => {}
+  ),
+  getPinnedIds: vi.fn(async (): Promise<string[]> => []),
+  setTemplateFlag: vi.fn(
+    async (_projectId: string, _isTemplate: boolean): Promise<void> => {}
+  ),
+  getTemplateProjectIds: vi.fn(async (): Promise<string[]> => []),
+  touchOpened: vi.fn(async (_projectId: string): Promise<void> => {}),
+  getRecentlyOpened: vi.fn(async (_limit: number): Promise<string[]> => []),
   getMeta: vi.fn(async (_key: string): Promise<string | null> => null),
   setMeta: vi.fn(async (_key: string, _value: string): Promise<void> => {}),
   getSchema: vi.fn(async () => []),

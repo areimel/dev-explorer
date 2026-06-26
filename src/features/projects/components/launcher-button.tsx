@@ -1,5 +1,6 @@
 import * as Icons from 'lucide-react'
 import { toast } from 'sonner'
+import { useProjectsStore } from '@/stores/projects-store'
 import { tauriCommands } from '@/lib/tauri/commands'
 import type { Launcher } from '@/lib/tauri/types'
 import { Button } from '@/components/ui/button'
@@ -25,6 +26,7 @@ export function LauncherButton({
 }) {
   async function handleClick() {
     await tauriCommands.openWithLauncher(projectPath, launcher.commandTemplate)
+    void useProjectsStore.getState().recordOpenByPath(projectPath)
     toast.success(`Opened with ${launcher.name}`)
   }
 

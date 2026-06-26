@@ -1,6 +1,7 @@
 import { MoreHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
 import { useLaunchersStore } from '@/stores/launchers-store'
+import { useProjectsStore } from '@/stores/projects-store'
 import { tauriCommands } from '@/lib/tauri/commands'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,6 +22,7 @@ export function ProjectCardLaunchers({ projectPath }: { projectPath: string }) {
 
   async function handleOverflowLaunch(commandTemplate: string, name: string) {
     await tauriCommands.openWithLauncher(projectPath, commandTemplate)
+    void useProjectsStore.getState().recordOpenByPath(projectPath)
     toast.success(`Opened with ${name}`)
   }
 

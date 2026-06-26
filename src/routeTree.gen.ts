@@ -19,9 +19,11 @@ import { Route as errors401RouteImport } from './routes/(errors)/401'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects/index'
+import { Route as AuthenticatedSettingsTemplatesRouteImport } from './routes/_authenticated/settings/templates'
 import { Route as AuthenticatedSettingsSchemaRouteImport } from './routes/_authenticated/settings/schema'
 import { Route as AuthenticatedSettingsScanRootsRouteImport } from './routes/_authenticated/settings/scan-roots'
 import { Route as AuthenticatedSettingsLaunchersRouteImport } from './routes/_authenticated/settings/launchers'
+import { Route as AuthenticatedSettingsGithubRouteImport } from './routes/_authenticated/settings/github'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 
@@ -77,6 +79,12 @@ const AuthenticatedProjectsIndexRoute =
     path: '/projects/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsTemplatesRoute =
+  AuthenticatedSettingsTemplatesRouteImport.update({
+    id: '/templates',
+    path: '/templates',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
 const AuthenticatedSettingsSchemaRoute =
   AuthenticatedSettingsSchemaRouteImport.update({
     id: '/schema',
@@ -93,6 +101,12 @@ const AuthenticatedSettingsLaunchersRoute =
   AuthenticatedSettingsLaunchersRouteImport.update({
     id: '/launchers',
     path: '/launchers',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsGithubRoute =
+  AuthenticatedSettingsGithubRouteImport.update({
+    id: '/github',
+    path: '/github',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
 const AuthenticatedSettingsAppearanceRoute =
@@ -118,9 +132,11 @@ export interface FileRoutesByFullPath {
   '/503': typeof errors503Route
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
+  '/settings/github': typeof AuthenticatedSettingsGithubRoute
   '/settings/launchers': typeof AuthenticatedSettingsLaunchersRoute
   '/settings/scan-roots': typeof AuthenticatedSettingsScanRootsRoute
   '/settings/schema': typeof AuthenticatedSettingsSchemaRoute
+  '/settings/templates': typeof AuthenticatedSettingsTemplatesRoute
   '/projects/': typeof AuthenticatedProjectsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
 }
@@ -133,9 +149,11 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
+  '/settings/github': typeof AuthenticatedSettingsGithubRoute
   '/settings/launchers': typeof AuthenticatedSettingsLaunchersRoute
   '/settings/scan-roots': typeof AuthenticatedSettingsScanRootsRoute
   '/settings/schema': typeof AuthenticatedSettingsSchemaRoute
+  '/settings/templates': typeof AuthenticatedSettingsTemplatesRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
 }
@@ -151,9 +169,11 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
+  '/_authenticated/settings/github': typeof AuthenticatedSettingsGithubRoute
   '/_authenticated/settings/launchers': typeof AuthenticatedSettingsLaunchersRoute
   '/_authenticated/settings/scan-roots': typeof AuthenticatedSettingsScanRootsRoute
   '/_authenticated/settings/schema': typeof AuthenticatedSettingsSchemaRoute
+  '/_authenticated/settings/templates': typeof AuthenticatedSettingsTemplatesRoute
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
 }
@@ -169,9 +189,11 @@ export interface FileRouteTypes {
     | '/503'
     | '/errors/$error'
     | '/settings/appearance'
+    | '/settings/github'
     | '/settings/launchers'
     | '/settings/scan-roots'
     | '/settings/schema'
+    | '/settings/templates'
     | '/projects/'
     | '/settings/'
   fileRoutesByTo: FileRoutesByTo
@@ -184,9 +206,11 @@ export interface FileRouteTypes {
     | '/'
     | '/errors/$error'
     | '/settings/appearance'
+    | '/settings/github'
     | '/settings/launchers'
     | '/settings/scan-roots'
     | '/settings/schema'
+    | '/settings/templates'
     | '/projects'
     | '/settings'
   id:
@@ -201,9 +225,11 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/errors/$error'
     | '/_authenticated/settings/appearance'
+    | '/_authenticated/settings/github'
     | '/_authenticated/settings/launchers'
     | '/_authenticated/settings/scan-roots'
     | '/_authenticated/settings/schema'
+    | '/_authenticated/settings/templates'
     | '/_authenticated/projects/'
     | '/_authenticated/settings/'
   fileRoutesById: FileRoutesById
@@ -289,6 +315,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/templates': {
+      id: '/_authenticated/settings/templates'
+      path: '/templates'
+      fullPath: '/settings/templates'
+      preLoaderRoute: typeof AuthenticatedSettingsTemplatesRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/settings/schema': {
       id: '/_authenticated/settings/schema'
       path: '/schema'
@@ -310,6 +343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsLaunchersRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
+    '/_authenticated/settings/github': {
+      id: '/_authenticated/settings/github'
+      path: '/github'
+      fullPath: '/settings/github'
+      preLoaderRoute: typeof AuthenticatedSettingsGithubRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/settings/appearance': {
       id: '/_authenticated/settings/appearance'
       path: '/appearance'
@@ -329,18 +369,22 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedSettingsRouteRouteChildren {
   AuthenticatedSettingsAppearanceRoute: typeof AuthenticatedSettingsAppearanceRoute
+  AuthenticatedSettingsGithubRoute: typeof AuthenticatedSettingsGithubRoute
   AuthenticatedSettingsLaunchersRoute: typeof AuthenticatedSettingsLaunchersRoute
   AuthenticatedSettingsScanRootsRoute: typeof AuthenticatedSettingsScanRootsRoute
   AuthenticatedSettingsSchemaRoute: typeof AuthenticatedSettingsSchemaRoute
+  AuthenticatedSettingsTemplatesRoute: typeof AuthenticatedSettingsTemplatesRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
 const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteChildren =
   {
     AuthenticatedSettingsAppearanceRoute: AuthenticatedSettingsAppearanceRoute,
+    AuthenticatedSettingsGithubRoute: AuthenticatedSettingsGithubRoute,
     AuthenticatedSettingsLaunchersRoute: AuthenticatedSettingsLaunchersRoute,
     AuthenticatedSettingsScanRootsRoute: AuthenticatedSettingsScanRootsRoute,
     AuthenticatedSettingsSchemaRoute: AuthenticatedSettingsSchemaRoute,
+    AuthenticatedSettingsTemplatesRoute: AuthenticatedSettingsTemplatesRoute,
     AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   }
 

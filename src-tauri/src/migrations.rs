@@ -53,5 +53,35 @@ CREATE TABLE app_meta (
 );
 ",
         kind: MigrationKind::Up,
+    },
+    Migration {
+        version: 2,
+        description: "dashboard_pins_recents_templates",
+        sql: "
+ALTER TABLE project_overrides ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE project_overrides ADD COLUMN last_opened_ms INTEGER;
+
+CREATE TABLE templates (
+  id           TEXT PRIMARY KEY NOT NULL,
+  name         TEXT NOT NULL,
+  description  TEXT NOT NULL DEFAULT '',
+  repo_url     TEXT NOT NULL,
+  language     TEXT,
+  tags         TEXT NOT NULL DEFAULT '[]',
+  sort_order   INTEGER NOT NULL DEFAULT 0,
+  created_at   INTEGER NOT NULL,
+  updated_at   INTEGER NOT NULL
+);
+CREATE INDEX idx_templates_sort_order ON templates(sort_order);
+",
+        kind: MigrationKind::Up,
+    },
+    Migration {
+        version: 3,
+        description: "project_overrides_is_template",
+        sql: "
+ALTER TABLE project_overrides ADD COLUMN is_template INTEGER NOT NULL DEFAULT 0;
+",
+        kind: MigrationKind::Up,
     }]
 }

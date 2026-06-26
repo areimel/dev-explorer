@@ -1,5 +1,4 @@
 import Database from '@tauri-apps/plugin-sql'
-
 import type {
   Launcher,
   Project,
@@ -8,6 +7,7 @@ import type {
   SchemaForeignKey,
   SchemaIndex,
   TableSchema,
+  Template,
 } from './types'
 
 // ---------------------------------------------------------------------------
@@ -59,6 +59,18 @@ type LauncherRow = {
   name: string
   icon: string
   command_template: string
+  sort_order: number
+  created_at: number
+  updated_at: number
+}
+
+type TemplateRow = {
+  id: string
+  name: string
+  description: string
+  repo_url: string
+  language: string | null
+  tags: string
   sort_order: number
   created_at: number
   updated_at: number
@@ -145,6 +157,24 @@ function rowToLauncher(row: LauncherRow): Launcher {
   }
 }
 
+function rowToTemplate(row: TemplateRow): Template {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    repoUrl: row.repo_url,
+    language: row.language,
+    tags: (() => {
+      try {
+        const parsed = JSON.parse(row.tags)
+        return Array.isArray(parsed) ? (parsed as string[]) : []
+      } catch {
+        return []
+      }
+    })(),
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Table list (hardcoded — must match the v1 migration)
 // ---------------------------------------------------------------------------
@@ -155,6 +185,7 @@ const DB_TABLES = [
   'launchers',
   'project_overrides',
   'app_meta',
+  'templates',
 ] as const
 
 // ---------------------------------------------------------------------------
@@ -372,6 +403,148 @@ export const dbRepo = {
       await db.execute('ROLLBACK')
       throw err
     }
+  },
+
+  // -------------------------------------------------------------------------
+  // Templates
+  // sort_order is internal to db.ts — the public Template type does not carry
+  // it. listTemplates() returns rows ordered by sort_order so callers get a
+  // correctly-ordered array. setTemplateOrder() translates array-index back to
+  // sort_order column values.
+  // -------------------------------------------------------------------------
+
+  async listTemplates(): Promise<Template[]> {
+    const db = await getDb()
+    const rows = await db.select<TemplateRow[]>(
+      'SELECT * FROM templates ORDER BY sort_order'
+    )
+    return rows.map(rowToTemplate)
+  },
+
+  async upsertTemplate(t: Template, sortOrder?: number): Promise<void> {
+    const db = await getDb()
+    const now = Date.now()
+    // When sortOrder is not supplied, use a large sentinel so new templates
+    // naturally append. On conflict, preserve existing sort_order unless an
+    // explicit value is passed.
+    const order = sortOrder ?? Number.MAX_SAFE_INTEGER
+    await db.execute(
+      `INSERT INTO templates (id, name, description, repo_url, language, tags, sort_order, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       ON CONFLICT(id) DO UPDATE SET
+         name        = excluded.name,
+         description = excluded.description,
+         repo_url    = excluded.repo_url,
+         language    = excluded.language,
+         tags        = excluded.tags,
+         sort_order  = CASE WHEN $7 = ${Number.MAX_SAFE_INTEGER} THEN templates.sort_order ELSE excluded.sort_order END,
+         created_at  = templates.created_at,
+         updated_at  = $9`,
+      [
+        t.id,
+        t.name,
+        t.description,
+        t.repoUrl,
+        t.language,
+        JSON.stringify(t.tags),
+        order,
+        now,
+        now,
+      ]
+    )
+  },
+
+  async deleteTemplate(id: string): Promise<void> {
+    const db = await getDb()
+    await db.execute('DELETE FROM templates WHERE id = $1', [id])
+  },
+
+  /** Update sort_order for each template in the given ordered array of ids. */
+  async setTemplateOrder(orderedIds: string[]): Promise<void> {
+    if (orderedIds.length === 0) return
+    const db = await getDb()
+    const now = Date.now()
+    await db.execute('BEGIN')
+    try {
+      for (let i = 0; i < orderedIds.length; i++) {
+        await db.execute(
+          'UPDATE templates SET sort_order = $1, updated_at = $2 WHERE id = $3',
+          [i, now, orderedIds[i]]
+        )
+      }
+      await db.execute('COMMIT')
+    } catch (err) {
+      await db.execute('ROLLBACK')
+      throw err
+    }
+  },
+
+  // -------------------------------------------------------------------------
+  // Project overrides — pinned + last opened
+  // -------------------------------------------------------------------------
+
+  async setPinned(projectId: string, pinned: boolean): Promise<void> {
+    const db = await getDb()
+    const now = Date.now()
+    await db.execute(
+      `INSERT INTO project_overrides (project_id, pinned, created_at, updated_at)
+       VALUES ($1, $2, $3, $3)
+       ON CONFLICT(project_id) DO UPDATE SET
+         pinned     = excluded.pinned,
+         updated_at = $3`,
+      [projectId, pinned ? 1 : 0, now]
+    )
+  },
+
+  async getPinnedIds(): Promise<string[]> {
+    const db = await getDb()
+    const rows = await db.select<{ project_id: string }[]>(
+      'SELECT project_id FROM project_overrides WHERE pinned = 1'
+    )
+    return rows.map((r) => r.project_id)
+  },
+
+  async setTemplateFlag(projectId: string, isTemplate: boolean): Promise<void> {
+    const db = await getDb()
+    const now = Date.now()
+    await db.execute(
+      `INSERT INTO project_overrides (project_id, is_template, created_at, updated_at)
+       VALUES ($1, $2, $3, $3)
+       ON CONFLICT(project_id) DO UPDATE SET
+         is_template = excluded.is_template,
+         updated_at  = $3`,
+      [projectId, isTemplate ? 1 : 0, now]
+    )
+  },
+
+  async getTemplateProjectIds(): Promise<string[]> {
+    const db = await getDb()
+    const rows = await db.select<{ project_id: string }[]>(
+      'SELECT project_id FROM project_overrides WHERE is_template = 1'
+    )
+    return rows.map((r) => r.project_id)
+  },
+
+  async touchOpened(projectId: string): Promise<void> {
+    const db = await getDb()
+    const now = Date.now()
+    await db.execute(
+      `INSERT INTO project_overrides (project_id, last_opened_ms, created_at, updated_at)
+       VALUES ($1, $2, $3, $3)
+       ON CONFLICT(project_id) DO UPDATE SET
+         last_opened_ms = excluded.last_opened_ms,
+         updated_at     = $3`,
+      [projectId, now, now]
+    )
+  },
+
+  async getRecentlyOpened(limit: number): Promise<string[]> {
+    const db = await getDb()
+    const rows = await db.select<{ project_id: string }[]>(
+      'SELECT project_id FROM project_overrides WHERE last_opened_ms IS NOT NULL ORDER BY last_opened_ms DESC LIMIT $1',
+      [limit]
+    )
+    return rows.map((r) => r.project_id)
   },
 
   // -------------------------------------------------------------------------

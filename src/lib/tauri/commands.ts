@@ -1,7 +1,9 @@
 import { invoke } from '@tauri-apps/api/core'
 
 import type {
+  ContributionCalendar,
   DetectedProject,
+  GitHubProfile,
   GitStatus,
   ProjectCardMeta,
   ProjectDetails,
@@ -21,5 +23,12 @@ export const tauriCommands = {
   getProjectCardsMeta: (paths: string[]) =>
     invoke<Record<string, ProjectCardMeta>>('get_project_cards_meta', {
       paths,
+    }),
+  githubGetProfile: (username: string, token: string | null) =>
+    invoke<GitHubProfile>('github_get_profile', { username, token }),
+  githubGetContributions: (username: string, token: string) =>
+    invoke<ContributionCalendar>('github_get_contributions', {
+      username,
+      token,
     }),
 }

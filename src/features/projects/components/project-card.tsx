@@ -8,7 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { CopyButton } from './copy-button'
+import { CopyButton } from '@/components/copy-button'
 import { languageDotClass } from './language-colors'
 import { ProjectActionsMenu } from './project-actions-menu'
 import { ProjectCardLaunchers } from './project-card-launchers'
